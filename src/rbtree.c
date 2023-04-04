@@ -55,6 +55,18 @@ void rotate_right(rbtree *t, node_t *curr)
   // 4. 임시 저장된 노드는 회전 기준 노드의 왼쪽 자식 노드가 된다.
   // 회전 후 root 노드 return(예정)
   curr->left->parent = curr->parent;
+  if (curr->parent != NULL)
+  {
+    if (curr == curr->parent->left)
+    {
+      curr->parent->left = curr->left;
+    }
+    else
+    {
+      curr->parent->right = curr->left;
+    }
+  }
+
   curr->parent = curr->left;
   curr->left = curr->parent->right;
   if (curr->left != NULL)
@@ -70,17 +82,17 @@ void rotate_right(rbtree *t, node_t *curr)
   {
     t->root = curr->parent;
   }
-  else // 회전 시작전 회전 기준 노드의 부모 노드가 존재한 경우
-  {
-    if (curr == curr->parent->parent->left)
-    {
-      curr->parent->parent->left = curr->parent;
-    }
-    else
-    {
-      curr->parent->parent->right = curr->parent;
-    }
-  }
+  // else // 회전 시작전 회전 기준 노드의 부모 노드가 존재한 경우
+  // {
+  //   if (curr == curr->parent->parent->left)
+  //   {
+  //     curr->parent->parent->left = curr->parent;
+  //   }
+  //   else
+  //   {
+  //     curr->parent->parent->right = curr->parent;
+  //   }
+  // }
 }
 void rotate_left(rbtree *t, node_t *curr)
 {
@@ -91,6 +103,17 @@ void rotate_left(rbtree *t, node_t *curr)
   // 4. 임시 저장된 노드는 회전 기준 노드의 왼쪽 자식 노드가 된다.
   // 회전 후 root 노드 return(예정)
   curr->right->parent = curr->parent;
+  if (curr->parent != NULL)
+  {
+    if (curr == curr->parent->left)
+    {
+      curr->parent->left = curr->right;
+    }
+    else
+    {
+      curr->parent->right = curr->right;
+    }
+  }
   curr->parent = curr->right;
   curr->right = curr->parent->left;
   if (curr->right != NULL)
@@ -106,20 +129,34 @@ void rotate_left(rbtree *t, node_t *curr)
   {
     t->root = curr->parent;
   }
-  else // 회전 시작전 회전 기준 노드의 부모 노드가 존재한 경우
-  {
-    if (curr == curr->parent->parent->left)
-    {
-      curr->parent->parent->left = curr->parent;
-    }
-    else
-    {
-      curr->parent->parent->right = curr->parent;
-    }
-  }
+  // else // 회전 시작전 회전 기준 노드의 부모 노드가 존재한 경우
+  // {
+  //   if (curr == curr->parent->parent->left)
+  //   {
+  //     curr->parent->parent->left = curr->parent;
+  //   }
+  //   else
+  //   {
+  //     curr->parent->parent->right = curr->parent;
+  //   }
+  // }
 }
 void arrange_rbtree_insert(rbtree *t, node_t *curr)
 {
+  if (curr->parent == NULL || curr->parent->parent == NULL)
+  {
+    return;
+  }
+  if (curr->color == RBTREE_BLACK) // Double-red 가 아닌 상황
+  {
+    return;
+  }
+  if (curr->color == RBTREE_RED && curr->parent->color == RBTREE_BLACK) // Double-red 가 아닌 상황
+  {
+    return;
+  }
+
+  // 위 조건을 모두 통과 하면 Double-red 인 상황
   node_t *u;
   if (curr->parent == curr->parent->parent->left)
   {
@@ -154,11 +191,18 @@ void arrange_rbtree_insert(rbtree *t, node_t *curr)
       {
         rotate_left(t, curr->parent);
 
-        color_t p_color = curr->parent->color;
-        curr->parent->color = curr->parent->parent->color;
-        curr->parent->parent->color = p_color;
+        // color_t p_color = curr->parent->color;
+        // curr->parent->color = curr->parent->parent->color;
+        // curr->parent->parent->color = p_color;
 
-        rotate_right(t, curr->parent->parent);
+        // rotate_right(t, curr->parent->parent);
+
+        node_t *new_curr = curr->left;
+        color_t p_color = new_curr->parent->color;
+        new_curr->parent->color = new_curr->parent->parent->color;
+        new_curr->parent->parent->color = p_color;
+
+        rotate_right(t, new_curr->parent->parent);
       }
     }
     else if (curr->parent == curr->parent->parent->right)
@@ -175,11 +219,18 @@ void arrange_rbtree_insert(rbtree *t, node_t *curr)
       {
         rotate_right(t, curr->parent);
 
-        color_t p_color = curr->parent->color;
-        curr->parent->color = curr->parent->parent->color;
-        curr->parent->parent->color = p_color;
+        // color_t p_color = curr->parent->color;
+        // curr->parent->color = curr->parent->parent->color;
+        // curr->parent->parent->color = p_color;
 
-        rotate_left(t, curr->parent->parent);
+        // rotate_left(t, curr->parent->parent);
+
+        node_t *new_curr = curr->right;
+        color_t p_color = new_curr->parent->color;
+        new_curr->parent->color = new_curr->parent->parent->color;
+        new_curr->parent->parent->color = p_color;
+
+        rotate_left(t, new_curr->parent->parent);
       }
     }
   }
@@ -250,10 +301,12 @@ node_t *rbtree_insert(rbtree *t, const key_t key)
       }
     }
   }
-  if (curr->parent->color == RBTREE_RED) // Double-red 상황
-  {
-    arrange_rbtree_insert(t, curr);
-  }
+
+  arrange_rbtree_insert(t, curr);
+  // if (curr->parent->color == RBTREE_RED) // Double-red 상황
+  // {
+  //   arrange_rbtree_insert(t, curr);
+  // }
 
   return t->root;
 }
@@ -340,9 +393,38 @@ int rbtree_erase(rbtree *t, node_t *p)
   // TODO: implement erase
   return 0;
 }
-
+int idx = 0;
+void traversal_inorder(node_t *curr, key_t *arr, const size_t n)
+{
+  if (curr->left != NULL)
+  {
+    traversal_inorder(curr->left, arr, n);
+  }
+  if (idx < n)
+  {
+    *(arr + idx) = curr->key;
+    idx += 1;
+  }
+  else
+  {
+    return;
+  }
+  if (curr->right != NULL)
+  {
+    traversal_inorder(curr->right, arr, n);
+  }
+}
 int rbtree_to_array(const rbtree *t, key_t *arr, const size_t n)
 {
   // TODO: implement to_array
+  traversal_inorder(t->root, arr, n);
+  if (idx < n)
+  {
+    for (idx; idx < n ; idx++)
+    {
+      *(arr + idx) = NULL;
+    }
+  }
+  idx = 0;
   return 0;
 }
