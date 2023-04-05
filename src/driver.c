@@ -1,4 +1,5 @@
 #include "rbtree.h"
+#include <stdlib.h>
 
 int main(int argc, char *argv[])
 {
@@ -8,6 +9,8 @@ int main(int argc, char *argv[])
     // {
     //    rbtree_insert(r, entries[i]); 
     // }
+    // key_t *arr = (key_t*)malloc(14*sizeof(key_t));
+    // rbtree_to_array(r, arr, (size_t)14);
     // rbtree_insert(r, 5);
     // rbtree_insert(r, 3);
     // rbtree_insert(r, 7);
