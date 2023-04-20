@@ -578,6 +578,11 @@ node_t *bst_delete(rbtree *t, node_t *p, node_t *extra_black)
             // extra_black->parent = successor->parent;
             extra_black->right = successor->parent; // nil 노드가 extra black인 경우를 구분하기 위해 사용
           }
+          else
+          {
+            free(successor);
+            return NULL;  
+          }
           free(successor);
         }
       }
@@ -860,7 +865,7 @@ int rbtree_erase(rbtree *t, node_t *p)
     case CASE1_REVERSE:
       parent->color = RBTREE_RED;
       bro->color = RBTREE_BLACK;
-      rotate_left(t, parent);
+      rotate_right(t, parent);
       break;
     }
   }
